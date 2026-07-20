@@ -1,0 +1,10 @@
+import { BottomNav } from "@/components/bottom-nav";
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-dvh bg-muted/30">
+      <main className="mx-auto w-full max-w-3xl px-4 pt-5 pb-24">{children}</main>
+      <BottomNav zone="admin" />
+    </div>
+  );
+}
