@@ -14,14 +14,22 @@
 
 ## Запуск
 
-1. Создайте проект на [supabase.com](https://supabase.com) (или `supabase start` локально).
-2. Примените миграцию: содержимое `supabase/migrations/0001_init.sql` выполните в SQL Editor
-   (создаёт все таблицы, индексы, RLS-политики, RPC-функции, сид специализаций и storage-бакеты).
-3. Скопируйте `.env.example` в `.env.local` и заполните:
-   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — из Project Settings → API
-   - `AUTH_JWT_SECRET` — любая длинная случайная строка
-   - `DEV_SMS_CODE` — код, принимаемый вместо SMS (по умолчанию `1234`)
+Проект Supabase **repair.link** (`syoijnvepdigansmgpvs`, регион ap-northeast-1) уже создан и настроен:
+все три миграции из `supabase/migrations/` применены (схема, индексы, RLS-политики,
+RPC-функции, сид специализаций, storage-бакеты), `.env.local` заполнен URL и anon-ключом.
+
+Остался один шаг — **вставить `service_role` секретный ключ** в `.env.local`
+(по соображениям безопасности MCP-инструменты Supabase не отдают этот ключ никому,
+даже агенту — только владелец проекта может его увидеть в дашборде):
+
+1. Откройте https://supabase.com/dashboard/project/syoijnvepdigansmgpvs/settings/api-keys
+2. Скопируйте секрет **service_role**
+3. Вставьте его в `.env.local` в `SUPABASE_SERVICE_ROLE_KEY=`
 4. `npm install && npm run dev`
+
+Если создаёте проект с нуля (другой Supabase-аккаунт): создайте проект на
+[supabase.com](https://supabase.com), примените миграции из `supabase/migrations/`
+в SQL Editor по порядку (0001 → 0002 → 0003) и заполните `.env.local` по `.env.example`.
 
 ### Роли
 
