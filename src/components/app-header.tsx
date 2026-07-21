@@ -7,7 +7,7 @@ export function AppHeader() {
         <Image src="/logo.png" alt="RepairLink" width={28} height={28} className="size-full object-cover" priority />
       </div>
       <span className="text-sm font-bold tracking-tight">
-        Repair<span className="text-brand">Link</span>
+        <span className="text-brand">Repair</span>Link
       </span>
     </header>
   );

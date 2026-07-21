@@ -84,7 +84,9 @@ export function LoginForm() {
         <div className="mx-auto mb-2 size-16 overflow-hidden rounded-2xl shadow-md">
           <Image src="/logo.png" alt="RepairLink" width={64} height={64} className="size-full object-cover" priority />
         </div>
-        <CardTitle className="text-2xl">RepairLink</CardTitle>
+        <CardTitle className="text-2xl">
+          <span className="text-brand">Repair</span>Link
+        </CardTitle>
         <CardDescription>
           Бытовой ремонт как такси: мастер за минуты, фиксированная цена, цифровая гарантия
         </CardDescription>
