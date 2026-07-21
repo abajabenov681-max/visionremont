@@ -64,7 +64,7 @@ export function BottomNav({ zone }: { zone: keyof typeof NAV_CONFIGS }) {
               href={item.href}
               className={cn(
                 "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] text-[11px] font-medium transition-colors",
-                active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                active ? "text-brand" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <item.icon className={cn("size-5", active && "stroke-[2.4]")} />

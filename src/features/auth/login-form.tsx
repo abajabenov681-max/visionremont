@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Hammer, Loader2, Phone, ShieldCheck, UserRound, Wrench } from "lucide-react";
+import { Hammer, Loader2, Phone, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -80,8 +81,8 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md rounded-2xl shadow-lg">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-2 flex size-14 items-center justify-center rounded-2xl bg-urgent text-urgent-foreground">
-          <Wrench className="size-7" />
+        <div className="mx-auto mb-2 size-16 overflow-hidden rounded-2xl shadow-md">
+          <Image src="/logo.png" alt="RepairLink" width={64} height={64} className="size-full object-cover" priority />
         </div>
         <CardTitle className="text-2xl">RepairLink</CardTitle>
         <CardDescription>
