@@ -6,6 +6,7 @@ import { Newspaper, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
+import { MotionItem, MotionList } from "@/components/motion";
 import { OrderCard } from "@/components/order-card";
 import { PageHeader } from "@/components/page-header";
 import { useSpecializations } from "@/hooks/useSpecializations";
@@ -47,7 +48,7 @@ export default function OrdersFeedPage() {
             onClick={() => setSpecId("")}
             className={cn(
               "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-              !specId ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground"
+              !specId ? "bg-brand text-brand-foreground" : "bg-card text-muted-foreground hover:text-foreground"
             )}
           >
             Все
@@ -58,7 +59,7 @@ export default function OrdersFeedPage() {
               onClick={() => setSpecId(spec.id === specId ? "" : spec.id)}
               className={cn(
                 "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                specId === spec.id ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground"
+                specId === spec.id ? "bg-brand text-brand-foreground" : "bg-card text-muted-foreground hover:text-foreground"
               )}
             >
               {spec.name}
@@ -72,11 +73,13 @@ export default function OrdersFeedPage() {
           <Skeleton className="h-28 rounded-2xl" />
         </div>
       ) : orders && orders.length > 0 ? (
-        <div className="space-y-3">
+        <MotionList className="space-y-3">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} href={`/master/orders/${order.id}`} />
+            <MotionItem key={order.id}>
+              <OrderCard order={order} href={`/master/orders/${order.id}`} />
+            </MotionItem>
           ))}
-        </div>
+        </MotionList>
       ) : (
         <EmptyState icon={Newspaper} title="Открытых заказов нет" description="Загляните позже или измените фильтры" />
       )}

@@ -106,7 +106,7 @@ export function LoginForm() {
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-sm font-medium transition-colors",
                     role === option.value
-                      ? "border-foreground bg-secondary"
+                      ? "border-brand bg-brand-muted text-brand"
                       : "border-border text-muted-foreground hover:border-muted-foreground/40"
                   )}
                 >

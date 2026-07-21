@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
               onClick={() => setRole(r)}
               className={cn(
                 "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                role === r ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground"
+                role === r ? "bg-brand text-brand-foreground" : "bg-card text-muted-foreground hover:text-foreground"
               )}
             >
               {r === "" ? "Все" : ROLE_LABELS[r]}

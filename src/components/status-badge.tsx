@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/constants";
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  WAITING: "bg-muted text-muted-foreground",
-  MATCHING: "bg-urgent/10 text-urgent",
-  IN_PROGRESS: "bg-blue-500/10 text-blue-600",
-  WAIT_CONFIRMATION: "bg-amber-500/10 text-amber-600",
+  WAITING: "bg-brand-muted text-brand",
+  MATCHING: "bg-brand-muted text-brand",
+  IN_PROGRESS: "bg-brand-muted text-brand",
+  WAIT_CONFIRMATION: "bg-brand-muted text-brand",
   COMPLETED: "bg-success/10 text-success",
   WARRANTY_ACTIVE: "bg-success/15 text-success",
   CANCELLED: "bg-muted text-muted-foreground line-through",

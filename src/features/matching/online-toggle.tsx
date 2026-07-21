@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { Radio } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useMe } from "@/hooks/useMe";
@@ -31,7 +32,8 @@ export function OnlineToggle({ size = "md" }: { size?: "md" | "lg" }) {
       className={cn(
         "flex cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card p-4 transition-colors",
         size === "lg" && "p-5",
-        isOnline && "border-success/40 bg-success/5"
+        // При включении — тонкая оранжевая рамка-акцент, сам статус остаётся зелёным
+        isOnline && "border-brand/60 bg-success/5"
       )}
     >
       <span className="flex items-center gap-3">
@@ -44,8 +46,15 @@ export function OnlineToggle({ size = "md" }: { size?: "md" | "lg" }) {
           <Radio className={cn("size-5", isOnline && "animate-pulse")} />
         </span>
         <span>
-          <span className={cn("block font-semibold", size === "lg" && "text-lg")}>
+          <span className={cn("flex items-center gap-2 font-semibold", size === "lg" && "text-lg")}>
             {isOnline ? "На линии" : "Не на линии"}
+            {isOnline && (
+              <motion.span
+                className="size-2 rounded-full bg-success"
+                animate={{ opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
           </span>
           <span className="block text-xs text-muted-foreground">
             {isOnline ? "Срочные заявки приходят мгновенно" : "Включите, чтобы получать срочные вызовы"}

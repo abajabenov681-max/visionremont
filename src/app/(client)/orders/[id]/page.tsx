@@ -6,6 +6,7 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 import { BadgeCheck, Loader2, MapPin, Pencil, ShieldCheck, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { CheckDraw } from "@/components/motion";
 import { StatusBadge } from "@/components/status-badge";
 import { PageHeader } from "@/components/page-header";
 import { RatingStars } from "@/components/rating-stars";
@@ -40,6 +42,7 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
   const queryClient = useQueryClient();
   const { data: me } = useMe();
   const [confirming, setConfirming] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const { data: order, isLoading } = useQuery({
@@ -64,11 +67,12 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
     setConfirming(true);
     try {
       const created = await apiFetch<WarrantyWithRelations>(`/api/orders/${id}/confirm`, { method: "POST" });
-      toast.success("Работа подтверждена — гарантия активирована!");
       queryClient.invalidateQueries({ queryKey: ["order", id] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["warranties"] });
-      router.push(`/warranties/${created.id}`);
+      // Короткая check-анимация перед переходом к сертификату гарантии
+      setConfirmed(true);
+      setTimeout(() => router.push(`/warranties/${created.id}`), 900);
     } catch (e) {
       toast.error(e instanceof FetchError ? e.message : "Ошибка сети");
       setConfirming(false);
@@ -104,6 +108,21 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-4">
+      {/* Оверлей успешного подтверждения работы: галочка рисуется ~350ms, затем переход к гарантии */}
+      <AnimatePresence>
+        {confirmed && (
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/90 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <CheckDraw className="size-20 text-success" />
+            <p className="text-lg font-bold">Гарантия активирована!</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <PageHeader
         title={order.title}
         subtitle={`Создан ${formatDateTime(order.created_at)}`}

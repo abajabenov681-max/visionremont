@@ -44,7 +44,7 @@ export default function MasterHomePage() {
       <OnlineToggle size="lg" />
 
       {noSpecializations && (
-        <Card className="rounded-2xl border-amber-500/40 bg-amber-500/5">
+        <Card className="rounded-2xl border-brand/40 bg-brand-muted">
           <CardContent className="flex items-center justify-between gap-3">
             <p className="text-sm">
               Укажите специализации в профиле, чтобы получать срочные вызовы

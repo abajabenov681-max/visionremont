@@ -114,7 +114,7 @@ export function ProfileForm() {
               <AvatarImage src={avatarUrl} />
               <AvatarFallback className="text-xl">{(name || "?").slice(0, 1).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <span className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full bg-foreground text-background">
+            <span className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full bg-brand text-brand-foreground">
               {uploading === "avatar" ? <Loader2 className="size-3 animate-spin" /> : <Camera className="size-3" />}
             </span>
           </button>
@@ -177,7 +177,7 @@ export function ProfileForm() {
                           className={cn(
                             "rounded-xl border-2 px-2 py-3 text-sm font-medium transition-colors",
                             active
-                              ? "border-foreground bg-secondary"
+                              ? "border-brand bg-brand-muted text-brand"
                               : "border-border text-muted-foreground hover:border-muted-foreground/40"
                           )}
                         >

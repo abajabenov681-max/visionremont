@@ -6,6 +6,7 @@ import { ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
+import { MotionItem, MotionList } from "@/components/motion";
 import { PageHeader } from "@/components/page-header";
 import { apiFetch } from "@/lib/fetcher";
 import { formatDate } from "@/lib/format";
@@ -27,11 +28,12 @@ export default function WarrantiesPage() {
           <Skeleton className="h-24 rounded-2xl" />
         </div>
       ) : warranties && warranties.length > 0 ? (
-        <div className="space-y-3">
+        <MotionList className="space-y-3">
           {warranties.map((w) => {
             const active = new Date(w.expires_at) > new Date();
             return (
-              <Link key={w.id} href={`/warranties/${w.id}`}>
+              <MotionItem key={w.id}>
+              <Link href={`/warranties/${w.id}`}>
                 <Card className="rounded-2xl transition-shadow hover:shadow-md">
                   <CardContent className="flex items-center gap-3">
                     <span
@@ -59,9 +61,10 @@ export default function WarrantiesPage() {
                   </CardContent>
                 </Card>
               </Link>
+              </MotionItem>
             );
           })}
-        </div>
+        </MotionList>
       ) : (
         <EmptyState
           icon={ShieldCheck}

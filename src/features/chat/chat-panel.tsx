@@ -86,12 +86,12 @@ export function ChatPanel({ orderId, myUserId }: { orderId: string; myUserId: st
                   className={cn(
                     "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm",
                     mine
-                      ? "ml-auto rounded-br-md bg-foreground text-background"
+                      ? "ml-auto rounded-br-md bg-brand text-brand-foreground"
                       : "mr-auto rounded-bl-md bg-muted"
                   )}
                 >
                   <p className="whitespace-pre-wrap break-words">{m.message}</p>
-                  <p className={cn("mt-0.5 text-[10px]", mine ? "text-background/60" : "text-muted-foreground")}>
+                  <p className={cn("mt-0.5 text-[10px]", mine ? "text-brand-foreground/70" : "text-muted-foreground")}>
                     {formatTime(m.created_at)}
                   </p>
                 </div>

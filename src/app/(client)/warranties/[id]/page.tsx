@@ -3,6 +3,7 @@
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FadeIn } from "@/components/motion";
 import { PageHeader } from "@/components/page-header";
 import { CertificateCard } from "@/features/warranties/certificate-card";
 import { apiFetch } from "@/lib/fetcher";
@@ -18,7 +19,13 @@ export default function WarrantyPage({ params }: { params: Promise<{ id: string 
   return (
     <div>
       <PageHeader title="Сертификат гарантии" />
-      {isLoading || !warranty ? <Skeleton className="h-96 rounded-2xl" /> : <CertificateCard warranty={warranty} />}
+      {isLoading || !warranty ? (
+        <Skeleton className="h-96 rounded-2xl" />
+      ) : (
+        <FadeIn>
+          <CertificateCard warranty={warranty} />
+        </FadeIn>
+      )}
     </div>
   );
 }

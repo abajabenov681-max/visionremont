@@ -38,7 +38,7 @@ export default function AdminOrdersPage() {
             onClick={() => setStatus(s)}
             className={cn(
               "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-              status === s ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground"
+              status === s ? "bg-brand text-brand-foreground" : "bg-card text-muted-foreground hover:text-foreground"
             )}
           >
             {s === "" ? "Все" : ORDER_STATUS_LABELS[s]}

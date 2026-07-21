@@ -84,7 +84,7 @@ export function OrderForm({ order }: { order?: OrderWithRelations }) {
               className={cn(
                 "rounded-xl border-2 px-2 py-3 text-sm font-medium transition-colors disabled:opacity-60",
                 selectedSpec === spec.id
-                  ? "border-foreground bg-secondary"
+                  ? "border-brand bg-brand-muted text-brand"
                   : "border-border text-muted-foreground hover:border-muted-foreground/40"
               )}
             >

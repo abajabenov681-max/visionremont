@@ -6,8 +6,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, MapPin, Zap } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, MapPin, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CheckDraw } from "@/components/motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,48 +132,75 @@ export function UrgentCallFlow() {
     return (
       <Card className="rounded-2xl">
         <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-          {foundMaster ? (
-            <>
-              <span className="flex size-20 items-center justify-center rounded-full bg-success/10">
-                <CheckCircle2 className="size-10 text-success" />
-              </span>
-              <div>
-                <p className="text-xl font-bold">Мастер найден!</p>
-                <p className="mt-1 text-muted-foreground">
-                  {foundMaster.full_name || "Мастер"} · рейтинг {Number(foundMaster.rating).toFixed(1)} · доверие{" "}
-                  {Math.round(Number(foundMaster.trust_score))}/100
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">Открываем заказ и чат…</p>
-              </div>
-            </>
-          ) : (
-            <>
-              <span className="relative flex size-20 items-center justify-center">
-                <span className="absolute inset-0 animate-ping rounded-full bg-urgent/20" />
-                <span className="relative flex size-20 items-center justify-center rounded-full bg-urgent/10">
-                  <Zap className="size-10 text-urgent" />
+          <AnimatePresence mode="wait">
+            {foundMaster ? (
+              <motion.div
+                key="found"
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 320, damping: 18 }}
+              >
+                <span className="flex size-20 items-center justify-center rounded-full bg-success/10">
+                  <CheckDraw className="size-12 text-success" />
                 </span>
-              </span>
-              <div>
-                <p className="text-xl font-bold">Ищем мастера…</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Заявка отправлена {onlineMasters > 0 ? `${onlineMasters} мастерам на линии` : "мастерам на линии"}
+                <div>
+                  <p className="text-xl font-bold">Мастер найден!</p>
+                  <p className="mt-1 text-muted-foreground">
+                    {foundMaster.full_name || "Мастер"} · рейтинг {Number(foundMaster.rating).toFixed(1)} · доверие{" "}
+                    {Math.round(Number(foundMaster.trust_score))}/100
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">Открываем заказ и чат…</p>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="searching"
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+              >
+                {/* Радар: расходящиеся пульсирующие кольца вокруг молнии */}
+                <span className="relative flex size-24 items-center justify-center">
+                  {[0, 0.5, 1].map((delay) => (
+                    <motion.span
+                      key={delay}
+                      className="absolute inset-0 rounded-full border-2 border-brand/50"
+                      initial={{ scale: 1, opacity: 0.7 }}
+                      animate={{ scale: 1.7, opacity: 0 }}
+                      transition={{ duration: 1.5, delay, repeat: Infinity, ease: "easeOut" }}
+                    />
+                  ))}
+                  <motion.span
+                    className="relative flex size-24 items-center justify-center rounded-full bg-brand-muted"
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Zap className="size-11 text-brand" />
+                  </motion.span>
+                </span>
+                <div>
+                  <p className="text-xl font-bold">Ищем мастера…</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Заявка отправлена {onlineMasters > 0 ? `${onlineMasters} мастерам на линии` : "мастерам на линии"}
+                  </p>
+                </div>
+                <p className="font-mono text-3xl font-bold tabular-nums">
+                  {minutes}:{seconds}
                 </p>
-              </div>
-              <p className="font-mono text-3xl font-bold tabular-nums">
-                {minutes}:{seconds}
-              </p>
-              {elapsed >= MATCHING_TIMEOUT_SECONDS && (
-                <p className="max-w-xs text-sm text-muted-foreground">
-                  Поиск идёт дольше обычного. Можно продолжить ждать или отменить вызов и создать обычный заказ.
-                </p>
-              )}
-              <Button variant="outline" className="rounded-xl" onClick={cancelSearch} disabled={cancelling}>
-                {cancelling && <Loader2 className="size-4 animate-spin" />}
-                Отменить поиск
-              </Button>
-            </>
-          )}
+                {elapsed >= MATCHING_TIMEOUT_SECONDS && (
+                  <p className="max-w-xs text-sm text-muted-foreground">
+                    Поиск идёт дольше обычного. Можно продолжить ждать или отменить вызов и создать обычный заказ.
+                  </p>
+                )}
+                <Button variant="outline" className="rounded-xl" onClick={cancelSearch} disabled={cancelling}>
+                  {cancelling && <Loader2 className="size-4 animate-spin" />}
+                  Отменить поиск
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
       </Card>
     );
@@ -232,7 +261,7 @@ export function UrgentCallFlow() {
       <Button
         type="submit"
         disabled={form.formState.isSubmitting}
-        className="h-14 w-full rounded-xl bg-urgent text-lg font-bold text-urgent-foreground hover:bg-urgent/90"
+        className="h-14 w-full rounded-xl bg-urgent text-lg font-bold text-urgent-foreground hover:bg-brand-hover"
       >
         {form.formState.isSubmitting ? <Loader2 className="size-5 animate-spin" /> : <Zap className="size-5" />}
         Вызвать мастера сейчас

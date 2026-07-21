@@ -7,6 +7,7 @@ import { ListChecks, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
+import { MotionItem, MotionList } from "@/components/motion";
 import { OrderCard } from "@/components/order-card";
 import { PageHeader } from "@/components/page-header";
 import { apiFetch } from "@/lib/fetcher";
@@ -52,7 +53,7 @@ export default function ClientOrdersPage() {
             onClick={() => setFilter(f.value)}
             className={cn(
               "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-              filter === f.value ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground"
+              filter === f.value ? "bg-brand text-brand-foreground" : "bg-card text-muted-foreground hover:text-foreground"
             )}
           >
             {f.label}
@@ -65,11 +66,13 @@ export default function ClientOrdersPage() {
           <Skeleton className="h-28 rounded-2xl" />
         </div>
       ) : filtered.length > 0 ? (
-        <div className="space-y-3">
+        <MotionList className="space-y-3" key={filter}>
           {filtered.map((order) => (
-            <OrderCard key={order.id} order={order} href={`/orders/${order.id}`} />
+            <MotionItem key={order.id}>
+              <OrderCard order={order} href={`/orders/${order.id}`} />
+            </MotionItem>
           ))}
-        </div>
+        </MotionList>
       ) : (
         <EmptyState
           icon={ListChecks}

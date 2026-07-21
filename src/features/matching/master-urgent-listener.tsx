@@ -109,8 +109,8 @@ export function MasterUrgentListener() {
   if (!card || !isOnline) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 pb-24 sm:items-center">
-      <div className="w-full max-w-md animate-in rounded-2xl bg-card p-5 shadow-2xl slide-in-from-bottom-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 pb-24 sm:items-center">
+      <div className="w-full max-w-md animate-in rounded-2xl border border-brand/40 bg-elevated p-5 shadow-2xl slide-in-from-bottom-4">
         <div className="flex items-center gap-2 text-urgent">
           <span className="flex size-9 items-center justify-center rounded-full bg-urgent/10">
             <Zap className="size-5" />
@@ -143,7 +143,7 @@ export function MasterUrgentListener() {
             Пропустить
           </Button>
           <Button
-            className="h-11 rounded-xl bg-urgent text-urgent-foreground hover:bg-urgent/90"
+            className="h-11 rounded-xl bg-urgent text-urgent-foreground hover:bg-brand-hover"
             onClick={() => accept(card.id)}
             disabled={accepting === card.id}
           >

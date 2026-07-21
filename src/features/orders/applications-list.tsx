@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/empty-state";
+import { MotionItem, MotionList } from "@/components/motion";
 import { RatingStars } from "@/components/rating-stars";
 import { TrustBadge } from "@/components/trust-badge";
 import { apiFetch, FetchError } from "@/lib/fetcher";
@@ -62,9 +63,10 @@ export function ApplicationsList({ orderId, canSelect }: { orderId: string; canS
   }
 
   return (
-    <div className="space-y-3">
+    <MotionList className="space-y-3">
       {applications.map((app) => (
-        <Card key={app.id} className="rounded-2xl">
+        <MotionItem key={app.id}>
+        <Card className="rounded-2xl">
           <CardContent className="space-y-3">
             <div className="flex items-start gap-3">
               <Avatar className="size-10">
@@ -99,7 +101,8 @@ export function ApplicationsList({ orderId, canSelect }: { orderId: string; canS
             )}
           </CardContent>
         </Card>
+        </MotionItem>
       ))}
-    </div>
+    </MotionList>
   );
 }

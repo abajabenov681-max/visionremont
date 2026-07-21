@@ -63,7 +63,7 @@ export default function MasterRatingPage() {
     <div className="space-y-4">
       <PageHeader title="Рейтинг и доверие" />
 
-      <Card className="rounded-2xl bg-foreground text-background">
+      <Card className="rounded-2xl border-brand/40 bg-gradient-to-br from-brand to-brand-hover text-brand-foreground">
         <CardContent className="flex flex-col items-center gap-1 py-8 text-center">
           <p className="text-sm opacity-70">Trust Score</p>
           <p className="text-5xl font-bold">
@@ -75,7 +75,7 @@ export default function MasterRatingPage() {
             <span className="text-sm opacity-70">{master.reviews_count} отзывов</span>
           </div>
           {master.id_verified && (
-            <p className="mt-2 flex items-center gap-1 rounded-full bg-background/10 px-3 py-1 text-xs">
+            <p className="mt-2 flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs">
               <BadgeCheck className="size-3.5" />
               Документы подтверждены
             </p>
