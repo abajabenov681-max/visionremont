@@ -171,7 +171,7 @@ create index idx_master_specializations_spec on public.master_specializations (s
 -- SEED: специализации
 -- ==========================================================================
 insert into public.specializations (name) values
-  ('Сантехник'), ('Ремонтник'), ('Плиточник')
+  ('Сантехник'), ('Ремонтник'), ('Плиточник'), ('Мебельщик')
 on conflict (name) do nothing;
 
 -- ==========================================================================

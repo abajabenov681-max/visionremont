@@ -80,11 +80,11 @@ export function MasterUrgentListener() {
   };
 
   // Отдельная подписка на канал каждой специализации мастера.
-  // Хуки нельзя вызывать в цикле переменной длины, поэтому фиксируем 3 слота
-  // (в MVP ровно 3 специализации).
+  // Хуки нельзя вызывать в цикле переменной длины — фиксируем слоты под все MVP-специализации.
   useRealtimeChannel(specializations[0] ? channels.urgent(specializations[0].id) : null, handlers, isOnline);
   useRealtimeChannel(specializations[1] ? channels.urgent(specializations[1].id) : null, handlers, isOnline);
   useRealtimeChannel(specializations[2] ? channels.urgent(specializations[2].id) : null, handlers, isOnline);
+  useRealtimeChannel(specializations[3] ? channels.urgent(specializations[3].id) : null, handlers, isOnline);
 
   async function accept(orderId: string) {
     setAccepting(orderId);
