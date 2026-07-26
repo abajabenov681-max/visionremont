@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, MapPin, Zap } from "lucide-react";
@@ -18,6 +18,10 @@ import { apiFetch, FetchError } from "@/lib/fetcher";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { ApplicationWithRelations, OrderWithRelations } from "@/types/db";
 
+// Статусы, после которых панель "завершить заказ" ДОЛЖНА реально исчезнуть —
+// это осознанные терминальные переходы, а не случайный откат данных.
+const TERMINAL_STATUSES = ["WAIT_CONFIRMATION", "COMPLETED", "WARRANTY_ACTIVE", "CANCELLED"];
+
 export default function MasterOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const queryClient = useQueryClient();
@@ -27,6 +31,12 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
   const { data: order, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["order", id],
     queryFn: () => apiFetch<OrderWithRelations>(`/api/orders/${id}`),
+    // Не дёргаем заказ при каждом переключении вкладки — снижает шанс поймать
+    // временный/некорректный ответ ровно в момент, когда пользователь смотрит на экран.
+    refetchOnWindowFocus: false,
+    // Не даём React Query подменять уже отрисованные данные на "пустое" состояние
+    // во время фонового рефетча.
+    placeholderData: (prev) => prev,
   });
 
   const { data: myApplications } = useQuery({
@@ -35,8 +45,26 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
   });
 
   const masterId = me?.master?.id;
-  const isMine = Boolean(order && masterId && order.selected_master === masterId);
+  const rawIsMine = Boolean(order && masterId && order.selected_master === masterId);
   const alreadyApplied = Boolean(myApplications?.some((a) => a.order_id === id));
+
+  // Sticky-флаги: если мы уже один раз убедились, что это "наш" заказ и он "в работе",
+  // не даём панели пропасть из-за случайного отката статуса/selected_master
+  // при фоновом обновлении данных (например, после отклика на другой заказ).
+  const [wasMineOnce, setWasMineOnce] = useState(false);
+  const [wasInProgressOnce, setWasInProgressOnce] = useState(false);
+
+  useEffect(() => {
+    if (rawIsMine) setWasMineOnce(true);
+  }, [rawIsMine]);
+
+  useEffect(() => {
+    if (rawIsMine && order?.status === "IN_PROGRESS") setWasInProgressOnce(true);
+  }, [rawIsMine, order?.status]);
+
+  const isTerminal = TERMINAL_STATUSES.includes(order?.status ?? "");
+  const isMine = rawIsMine || (wasMineOnce && !isTerminal);
+  const showComplete = isMine && (order?.status === "IN_PROGRESS" || (wasInProgressOnce && !isTerminal));
 
   async function markComplete() {
     setCompleting(true);
@@ -77,7 +105,6 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
   }
 
   const afterImages = order.images.filter((i) => i.type === "AFTER");
-  const showComplete = isMine && order.status === "IN_PROGRESS";
 
   return (
     <div className={showComplete ? "space-y-4 pb-20" : "space-y-4"}>
@@ -133,7 +160,7 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
-      {/* Как в первом варианте: завершение СРАЗУ после фото, чат ниже */}
+      {/* Завершение сразу после фото, чат ниже */}
       {showComplete && (
         <Card className="rounded-2xl border-2 border-blue-500/30">
           <CardContent className="space-y-3">
@@ -177,7 +204,7 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
-      {/* Чат ниже блока завершения — как в первом варианте */}
+      {/* Чат ниже блока завершения */}
       {isMine && me && <ChatPanel orderId={id} myUserId={me.user.id} />}
 
       {/* Фиксированная кнопка завершения над нижним меню — не пропадает при скролле/ответе */}
