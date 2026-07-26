@@ -31,10 +31,11 @@ import { ImageUploader } from "@/features/orders/image-uploader";
 import { ChatPanel } from "@/features/chat/chat-panel";
 import { ReviewForm } from "@/features/reviews/review-form";
 import { FavoriteButton } from "@/features/favorites/favorite-button";
+import { EscrowBreakdown, EscrowCard } from "@/features/escrow/escrow-card";
 import { useMe } from "@/hooks/useMe";
 import { apiFetch, FetchError } from "@/lib/fetcher";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import type { OrderWithRelations, ReviewRow, WarrantyWithRelations } from "@/types/db";
+import type { EscrowTransactionRow, OrderWithRelations, ReviewRow, WarrantyWithRelations } from "@/types/db";
 
 export default function ClientOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -42,7 +43,7 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
   const queryClient = useQueryClient();
   const { data: me } = useMe();
   const [confirming, setConfirming] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState<{ escrow: EscrowTransactionRow } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const { data: order, isLoading } = useQuery({
@@ -66,13 +67,16 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
   async function confirmCompletion() {
     setConfirming(true);
     try {
-      const created = await apiFetch<WarrantyWithRelations>(`/api/orders/${id}/confirm`, { method: "POST" });
+      const created = await apiFetch<{ warranty: WarrantyWithRelations; escrow: EscrowTransactionRow }>(
+        `/api/orders/${id}/confirm`,
+        { method: "POST" }
+      );
       queryClient.invalidateQueries({ queryKey: ["order", id] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["warranties"] });
-      // Короткая check-анимация перед переходом к сертификату гарантии
-      setConfirmed(true);
-      setTimeout(() => router.push(`/warranties/${created.id}`), 900);
+      // Оверлей: галочка + escrow-разбивка (F = O × 0.07, M = O − F), затем сертификат
+      setConfirmed({ escrow: created.escrow });
+      setTimeout(() => router.push(`/warranties/${created.warranty.id}`), 3200);
     } catch (e) {
       toast.error(e instanceof FetchError ? e.message : "Ошибка сети");
       setConfirming(false);
@@ -108,17 +112,42 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-4">
-      {/* Оверлей успешного подтверждения работы: галочка рисуется ~350ms, затем переход к гарантии */}
+      {/* Оверлей подтверждения: галочка, затем анимированный переход
+          «Средства зарезервированы» -> «Переведено мастеру» с разбивкой по TVEP */}
       <AnimatePresence>
         {confirmed && (
           <motion.div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/90 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/95 p-6 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <CheckDraw className="size-20 text-success" />
             <p className="text-lg font-bold">Гарантия активирована!</p>
+            <motion.div
+              className="w-full max-w-sm space-y-2 rounded-2xl border bg-card p-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.35, ease: "easeOut" }}
+            >
+              <motion.p
+                className="text-sm font-medium text-muted-foreground"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ delay: 1.6, duration: 0.3 }}
+              >
+                Средства зарезервированы 🔒
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.8, duration: 0.35 }}
+                className="space-y-2"
+              >
+                <p className="font-semibold">Переведено мастеру ✅</p>
+                <EscrowBreakdown escrow={confirmed.escrow} />
+              </motion.div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -181,6 +210,9 @@ export default function ClientOrderPage({ params }: { params: Promise<{ id: stri
           )}
         </CardContent>
       </Card>
+
+      {/* Escrow: состояние безопасной сделки */}
+      <EscrowCard escrow={order.escrow} />
 
       {/* Фото */}
       {(beforeImages.length > 0 || afterImages.length > 0) && (

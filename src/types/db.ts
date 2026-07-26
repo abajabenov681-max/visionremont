@@ -1,4 +1,4 @@
-import type { ImageType, OrderStatus, Role } from "@/lib/constants";
+import type { DocumentStatus, EscrowStatus, ImageType, OrderStatus, Role } from "@/lib/constants";
 
 export interface UserRow {
   id: string;
@@ -28,7 +28,28 @@ export interface MasterProfileRow {
   completed_orders: number;
   phone_verified: boolean;
   id_verified: boolean;
+  document_status: DocumentStatus;
   is_online: boolean;
+}
+
+export interface OtpCodeRow {
+  id: string;
+  phone: string;
+  code: string;
+  expires_at: string;
+  attempts: number;
+  created_at: string;
+}
+
+export interface EscrowTransactionRow {
+  id: string;
+  order_id: string;
+  amount: number | null;
+  commission: number | null;
+  master_amount: number | null;
+  status: EscrowStatus;
+  reserved_at: string;
+  released_at: string | null;
 }
 
 export interface SpecializationRow {
@@ -135,6 +156,7 @@ export interface OrderWithRelations extends OrderRow {
   client: ClientProfileRow | null;
   master: MasterProfileRow | null;
   images: OrderImageRow[];
+  escrow?: EscrowTransactionRow | null;
   applications_count?: number;
 }
 

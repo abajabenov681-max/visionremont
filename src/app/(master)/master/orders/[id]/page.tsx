@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { ApplyForm } from "@/features/orders/apply-form";
 import { ImageUploader } from "@/features/orders/image-uploader";
 import { ChatPanel } from "@/features/chat/chat-panel";
+import { EscrowCard } from "@/features/escrow/escrow-card";
 import { useMe } from "@/hooks/useMe";
 import { apiFetch, FetchError } from "@/lib/fetcher";
 import { formatDateTime, formatMoney } from "@/lib/format";
@@ -97,6 +98,9 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
           )}
         </CardContent>
       </Card>
+
+      {/* Escrow: состояние безопасной сделки (виден только назначенному мастеру) */}
+      {isMine && <EscrowCard escrow={order.escrow} />}
 
       {/* Фото */}
       {order.images.length > 0 && (

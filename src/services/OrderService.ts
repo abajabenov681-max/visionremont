@@ -9,6 +9,7 @@ import {
   type OrderStatus,
 } from "@/lib/constants";
 import { broadcast } from "@/lib/supabase/realtime";
+import * as EscrowService from "@/services/EscrowService";
 import * as orders from "@/repositories/orderRepository";
 import * as applicationsRepo from "@/repositories/applicationRepository";
 import * as profiles from "@/repositories/profileRepository";
@@ -173,6 +174,8 @@ export async function selectMaster(
     status: ORDER_STATUSES.IN_PROGRESS,
     selected_master: app.master_id,
   });
+  // Escrow: резервируем сумму принятого отклика до подтверждения работы
+  await EscrowService.reserve(orderId, Number(app.price));
   // уведомляем участников заказа (мастер увидит, что его выбрали)
   await broadcast(channels.order(orderId), REALTIME_EVENTS.ORDER_ACCEPTED, {
     order_id: orderId,

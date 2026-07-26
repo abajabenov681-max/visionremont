@@ -9,13 +9,15 @@ const ORDER_SELECT_BASE = `
   *,
   specialization:specializations(*),
   master:master_profiles!orders_selected_master_fkey(*),
-  images:order_images(*)
+  images:order_images(*),
+  escrow:escrow_transactions(*)
 `;
 
 type OrderJoined = OrderRow & {
   specialization: OrderWithRelations["specialization"];
   master: OrderWithRelations["master"];
   images: OrderImageRow[];
+  escrow: OrderWithRelations["escrow"];
 };
 
 async function attachClients(rows: OrderJoined[]): Promise<OrderWithRelations[]> {

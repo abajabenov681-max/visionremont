@@ -2,6 +2,7 @@ import "server-only";
 import { ApiError } from "@/lib/api";
 import { ORDER_STATUSES, ROLES, channels, REALTIME_EVENTS } from "@/lib/constants";
 import { broadcast } from "@/lib/supabase/realtime";
+import * as EscrowService from "@/services/EscrowService";
 import * as orders from "@/repositories/orderRepository";
 import * as profiles from "@/repositories/profileRepository";
 import type { SessionUser } from "@/types/api";
@@ -63,6 +64,9 @@ export async function acceptUrgent(session: SessionUser, orderId: string): Promi
   if (!won) throw new ApiError("Заказ уже принят другим мастером", 409);
 
   const order = (await orders.getOrder(orderId))!;
+
+  // Escrow: резерв по срочному вызову (сумма фиксируется по бюджету, если задан)
+  await EscrowService.reserve(orderId, order.budget != null ? Number(order.budget) : null);
 
   // 1) клиенту на экран «Ищем мастера…»
   await broadcast(channels.order(orderId), REALTIME_EVENTS.ORDER_ACCEPTED, {

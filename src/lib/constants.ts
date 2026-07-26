@@ -29,6 +29,41 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 export const IMAGE_TYPES = { BEFORE: "BEFORE", AFTER: "AFTER" } as const;
 export type ImageType = (typeof IMAGE_TYPES)[keyof typeof IMAGE_TYPES];
 
+/* ---- Проверка документов мастера администратором ---- */
+
+export const DOCUMENT_STATUSES = {
+  NONE: "NONE",
+  PENDING: "PENDING",
+  VERIFIED: "VERIFIED",
+  REJECTED: "REJECTED",
+} as const;
+export type DocumentStatus = (typeof DOCUMENT_STATUSES)[keyof typeof DOCUMENT_STATUSES];
+
+export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
+  NONE: "Документы не загружены",
+  PENDING: "На проверке",
+  VERIFIED: "Подтверждено",
+  REJECTED: "Отклонено",
+};
+
+/* ---- Escrow Module ---- */
+
+export const ESCROW_STATUSES = {
+  RESERVED: "RESERVED",
+  RELEASED: "RELEASED",
+  REFUNDED: "REFUNDED",
+} as const;
+export type EscrowStatus = (typeof ESCROW_STATUSES)[keyof typeof ESCROW_STATUSES];
+
+/** Комиссия платформы (TVEP): F = O × 0.07, мастеру M = O − F */
+export const PLATFORM_COMMISSION_RATE = 0.07;
+
+/* ---- SMS OTP ---- */
+
+export const OTP_TTL_MINUTES = 5;
+export const OTP_MAX_ATTEMPTS = 3;
+export const OTP_RESEND_COOLDOWN_SECONDS = 60;
+
 export const SESSION_COOKIE = "rl_session";
 export const SESSION_TTL_DAYS = 30;
 

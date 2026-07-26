@@ -1,23 +1,24 @@
 import "server-only";
 import { ApiError } from "@/lib/api";
 import { DEFAULT_WARRANTY_MONTHS, ORDER_STATUSES, ROLES } from "@/lib/constants";
+import * as EscrowService from "@/services/EscrowService";
 import * as warranties from "@/repositories/warrantyRepository";
 import * as orders from "@/repositories/orderRepository";
 import * as profiles from "@/repositories/profileRepository";
 import type { SessionUser } from "@/types/api";
-import type { WarrantyWithRelations } from "@/types/db";
+import type { EscrowTransactionRow, WarrantyWithRelations } from "@/types/db";
 
 /**
  * Подтверждение завершения клиентом. Транзакционно (RPC в БД):
  * заказ -> WARRANTY_ACTIVE, создаётся Warranty + Certificate, обновляется
- * статистика мастера. Точка расширения для эскроу: сюда добавится release
- * платежа — интерфейс сервиса менять не придётся.
+ * статистика мастера. Затем Escrow Module переводит платёж мастеру
+ * (release: комиссия F = O × 0.07, выплата M = O − F).
  */
 export async function confirmCompletion(
   session: SessionUser,
   orderId: string,
   warrantyMonths: number = DEFAULT_WARRANTY_MONTHS
-): Promise<WarrantyWithRelations> {
+): Promise<{ warranty: WarrantyWithRelations; escrow: EscrowTransactionRow }> {
   const order = await orders.getOrder(orderId);
   if (!order) throw new ApiError("Заказ не найден", 404);
   if (order.client_id !== session.id) throw new ApiError("Нет доступа", 403);
@@ -28,7 +29,11 @@ export async function confirmCompletion(
   const warrantyId = await warranties.confirmCompletion(orderId, warrantyMonths);
   const warranty = await warranties.getWarranty(warrantyId);
   if (!warranty) throw new ApiError("Гарантия не создана", 500);
-  return warranty;
+
+  // Escrow release: сумма — из резерва, иначе цена работы из сертификата
+  const escrow = await EscrowService.release(orderId, Number(warranty.certificate?.total_price ?? 0));
+
+  return { warranty, escrow };
 }
 
 export async function listMyWarranties(session: SessionUser): Promise<WarrantyWithRelations[]> {

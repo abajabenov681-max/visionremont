@@ -39,8 +39,14 @@
 - Next.js Route Handlers (`src/app/api/**`) — тонкий REST-слой над сервисами
 - [Supabase](https://supabase.com): PostgreSQL, Storage (фото/документы), **Realtime** (broadcast-каналы
   для мэтчинга срочных заявок и чата)
-- Собственная сессия по телефону: JWT (`jose`) в httpOnly-cookie, без Supabase Auth —
-  всё написано вручную под точечную бизнес-логику (роли, dev-SMS-код)
+- Аутентификация: **SMS OTP** — 4-значный код с TTL 5 минут (таблица `otp_codes`,
+  лимиты: 1 отправка в 60 с, 3 попытки ввода), отправка через SMS-провайдера
+  [Mobizon](https://mobizon.kz); пользователь регистрируется в Supabase Auth,
+  сессия — JWT (`jose`) в httpOnly-cookie. Продублировано Supabase Edge Functions
+  `send-sms-otp` / `verify-sms-otp` (`supabase/functions/`)
+- **Escrow Module** (`EscrowService` + таблица `escrow_transactions`) — управление
+  безопасными сделками: резерв средств при выборе мастера, после подтверждения работы —
+  выплата мастеру с удержанием комиссии платформы `F = O × 0.07`, `M = O − F`
 - PostgreSQL RPC-функции (`SECURITY DEFINER`) для атомарных операций: принятие срочного
   заказа «первый пришёл — первый забрал», подтверждение завершения работ + выдача гарантии,
   пересчёт Trust Score
@@ -96,13 +102,14 @@ Frontend разложен по фича-модулям (`src/features/*`) и т�
 src/
   app/
     (client)/        клиентская зона: главная («Аварийный вызов»), заказы, гарантии,
-                      избранное, профиль, карточка мастера
+                      паспорт ремонта (история работ по адресу), избранное, профиль,
+                      карточка мастера
     (master)/         кабинет мастера: тумблер «На линии», лента заказов, отклики,
                       гарантии, рейтинг/Trust Score, профиль
     (admin)/          админка: дашборд, пользователи, заказы, отзывы, верификация мастеров
-    login/            вход по телефону (dev-SMS-код)
+    login/            вход по телефону (SMS OTP)
     api/              REST-роуты (auth, users, masters, orders, orders/urgent, applications,
-                      chat, reviews, warranties, favorites, admin, specializations)
+                      chat, reviews, warranties, passport, favorites, admin, specializations)
     globals.css       дизайн-токены (тёмная тема, фирменный оранжевый)
   components/         общие UI-компоненты (карточки заказа/мастера, бейджи, нижняя навигация,
                       шапка, motion-примитивы)
@@ -117,7 +124,10 @@ src/
   types/              типы таблиц БД (db.ts) и API-контракты (api.ts)
 supabase/
   migrations/         0001_init.sql (схема, индексы, RLS, RPC, сид специализаций, бакеты),
-                      0002_harden_rpc_execute_grants.sql, 0003_optimize_rls_and_indexes.sql
+                      0002_harden_rpc_execute_grants.sql, 0003_optimize_rls_and_indexes.sql,
+                      0004_otp_documents_escrow.sql (otp_codes, статусы документов,
+                      escrow_transactions)
+  functions/          Edge Functions: send-sms-otp, verify-sms-otp
 ```
 
 ---
@@ -138,6 +148,8 @@ supabase/
 | `reviews` | отзыв клиента после завершения работы |
 | `warranties`, `warranty_certificates` | цифровая гарантия и сертификат с фото до/после |
 | `favorites` | избранные мастера у клиента |
+| `otp_codes` | SMS-коды подтверждения (TTL 5 мин, счётчик попыток) |
+| `escrow_transactions` | безопасная сделка: резерв → выплата мастеру с комиссией платформы |
 | `admin_logs` | журнал действий администратора |
 
 Статусы заказа: `WAITING → (срочные уходят в MATCHING) → IN_PROGRESS → WAIT_CONFIRMATION
@@ -167,12 +179,33 @@ supabase/
 5. Сервер рассылает `order_accepted` (клиенту — переход в «Мастер найден!») и `urgent_taken`
    (остальным мастерам — карточка исчезает).
 
+### Escrow: безопасная сделка
+
+1. При выборе мастера (или принятии срочного вызова) `EscrowService.reserve` резервирует
+   сумму сделки — заказ показывает «Средства зарезервированы 🔒».
+2. После подтверждения клиентом `EscrowService.release` переводит платёж мастеру:
+   комиссия `F = O × 0.07`, выплата `M = O − F` — разбивка показывается на экране
+   подтверждения. Комиссия удерживается только после подтверждения работы.
+
 ### Завершение работы и гарантия
 
 1. Мастер загружает фото «после» и отмечает заказ выполненным → статус `WAIT_CONFIRMATION`.
 2. Клиент подтверждает (`POST /api/orders/{id}/confirm`) → RPC `confirm_order_completion`
    транзакционно переводит заказ в `WARRANTY_ACTIVE`, создаёт `warranty` и
-   `warranty_certificate`, пересчитывает статистику мастера.
+   `warranty_certificate`, пересчитывает статистику мастера, затем Escrow Module
+   фиксирует выплату мастеру.
+
+### Паспорт ремонта квартиры
+
+Все завершённые работы с гарантиями группируются по адресу (`/passport`):
+хронологическая лента по каждой квартире — дата, специализация, мастер, фото до/после,
+стоимость, статус гарантии. Долгосрочная история ремонта — product moat платформы.
+
+### Проверка документов мастеров
+
+Мастер загружает документ в профиле → статус `PENDING`. Администратор в
+`/admin/masters` подтверждает или отклоняет (`VERIFIED` / `REJECTED`) — обновляется
+`id_verified` и пересчитывается Trust Score.
 
 ---
 
@@ -221,8 +254,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon/publishable key>
 SUPABASE_SERVICE_ROLE_KEY=<service_role secret key>   # Settings → API Keys → service_role
 AUTH_JWT_SECRET=<любая случайная строка ≥32 символов>
+MOBIZON_API_KEY=            # ключ SMS-провайдера; пусто = demo-режим (код 1234 без SMS)
+DEMO_PHONE_NUMBER=+77000000000   # демо-номер: всегда код 1234 без реальной отправки
 DEV_SMS_CODE=1234
-NEXT_PUBLIC_DEV_MODE=true
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` — секретный ключ, доступен только владельцу проекта в дашборде
@@ -235,9 +269,9 @@ NEXT_PUBLIC_DEV_MODE=true
 npm run dev
 ```
 
-Приложение поднимется на [localhost:3000](http://localhost:3000). Вход — по номеру телефона,
-код подтверждения в dev-режиме фиксированный (`DEV_SMS_CODE`, по умолчанию `1234`) и
-подставляется в форму автоматически.
+Приложение поднимется на [localhost:3000](http://localhost:3000). Вход — по номеру телефона
+через SMS OTP. Если `MOBIZON_API_KEY` не задан, работает demo-режим: код `1234` без
+реальной отправки SMS, подставляется в форму автоматически.
 
 ### 6. Другие команды
 
@@ -280,8 +314,9 @@ npm run lint    # ESLint
 
 ## Что сознательно не входит в MVP
 
-- Реальный платёжный эскроу — но `WarrantyService.confirmCompletion` уже готовая точка
-  для интеграции провайдера эскроу.
+- Реальный платёжный провайдер в эскроу — `EscrowService` полностью управляет жизненным
+  циклом сделки (резерв → выплата с комиссией) в БД; вызов провайдера (Kaspi Pay и т.п.)
+  подключается внутрь `reserve`/`release` без изменения интерфейса.
 - Карта/геолокация — адрес хранится как текст.
 - Push-уведомления — только in-app уведомления через Realtime и тосты.
 - Формальная система споров/арбитража.

@@ -204,13 +204,17 @@ export function ProfileForm() {
             <CardTitle className="text-base">Документы</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {me.master?.id_verified ? (
+            {me.master?.document_status === "VERIFIED" ? (
               <p className="flex items-center gap-2 text-sm font-medium text-success">
                 <FileCheck2 className="size-4" />
-                Документы подтверждены — Trust Score учитывает верификацию
+                Подтверждено ✅ — Trust Score учитывает верификацию
               </p>
-            ) : me.master?.document_url ? (
-              <p className="text-sm text-muted-foreground">Документ на проверке у администратора</p>
+            ) : me.master?.document_status === "REJECTED" ? (
+              <p className="text-sm font-medium text-destructive">
+                Отклонено — загрузите корректный документ повторно
+              </p>
+            ) : me.master?.document_status === "PENDING" ? (
+              <p className="text-sm font-medium text-brand">На проверке у администратора</p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 Загрузите удостоверение личности — подтверждённые мастера получают больше заказов

@@ -75,7 +75,14 @@ export async function updateMasterProfile(
   patch: Partial<
     Pick<
       MasterProfileRow,
-      "full_name" | "description" | "avatar_url" | "document_url" | "is_online" | "id_verified" | "phone_verified"
+      | "full_name"
+      | "description"
+      | "avatar_url"
+      | "document_url"
+      | "is_online"
+      | "id_verified"
+      | "phone_verified"
+      | "document_status"
     >
   >
 ): Promise<MasterProfileRow> {

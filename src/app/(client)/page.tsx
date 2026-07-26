@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Hammer, ListPlus, ShieldCheck, Wrench, Zap } from "lucide-react";
+import { ArrowRight, Hammer, Home, ListPlus, ShieldCheck, Wrench, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderCard } from "@/components/order-card";
@@ -71,6 +71,21 @@ export default function ClientHomePage() {
           </Card>
         </Link>
       </div>
+
+      <Link href="/passport" className="block">
+        <Card className="rounded-2xl transition-shadow hover:shadow-md">
+          <CardContent className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-muted">
+              <Home className="size-5 text-brand" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Паспорт ремонта</p>
+              <p className="text-xs text-muted-foreground">Вся история ремонта квартиры по адресу</p>
+            </div>
+            <ArrowRight className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </Link>
 
       <section>
         <div className="mb-3 flex items-center justify-between">

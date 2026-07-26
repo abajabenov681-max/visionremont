@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError } from "@/lib/api";
-import { ORDER_STATUSES } from "@/lib/constants";
+import { DOCUMENT_STATUSES, ORDER_STATUSES, type DocumentStatus } from "@/lib/constants";
 import { getAdminClient } from "@/lib/supabase/admin";
 import * as adminLogs from "@/repositories/adminLogRepository";
 import * as usersRepo from "@/repositories/userRepository";
@@ -101,14 +101,27 @@ export async function listMastersForVerification(): Promise<MasterPublic[]> {
   return profiles.listMasters({});
 }
 
-export async function verifyMaster(admin: SessionUser, masterProfileId: string, verified: boolean): Promise<void> {
+/**
+ * Решение администратора по документам мастера: VERIFIED / REJECTED / PENDING
+ * (PENDING — вернуть на повторную проверку). Меняет id_verified и
+ * пересчитывает Trust Score, как заявлено в TVEP.
+ */
+export async function setDocumentStatus(
+  admin: SessionUser,
+  masterProfileId: string,
+  status: Extract<DocumentStatus, "VERIFIED" | "REJECTED" | "PENDING">
+): Promise<void> {
   const master = await profiles.getMasterProfileById(masterProfileId);
   if (!master) throw new ApiError("Мастер не найден", 404);
+  if (!master.document_url) throw new ApiError("У мастера нет загруженных документов");
   const db = getAdminClient();
-  const { error } = await db.from("master_profiles").update({ id_verified: verified }).eq("id", masterProfileId);
+  const { error } = await db
+    .from("master_profiles")
+    .update({ document_status: status, id_verified: status === DOCUMENT_STATUSES.VERIFIED })
+    .eq("id", masterProfileId);
   if (error) throw error;
   await reviewsRepo.recalcMasterStats(masterProfileId);
-  await adminLogs.log(admin.id, verified ? "VERIFY_MASTER" : "UNVERIFY_MASTER", "master_profiles", masterProfileId);
+  await adminLogs.log(admin.id, `DOCUMENT_${status}`, "master_profiles", masterProfileId);
 }
 
 export async function listLogs(): Promise<AdminLogRow[]> {

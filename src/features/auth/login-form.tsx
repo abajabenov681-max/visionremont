@@ -155,7 +155,7 @@ export function LoginForm() {
               {devCode && (
                 <p className="flex items-center gap-1 text-xs text-success">
                   <ShieldCheck className="size-3.5" />
-                  Dev-режим: код {devCode} подставлен автоматически
+                  Demo-режим: код {devCode} подставлен автоматически
                 </p>
               )}
             </div>

@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError } from "@/lib/api";
-import { ROLES } from "@/lib/constants";
+import { DOCUMENT_STATUSES, ROLES } from "@/lib/constants";
 import * as users from "@/repositories/userRepository";
 import * as profiles from "@/repositories/profileRepository";
 import type { SessionUser } from "@/types/api";
@@ -49,7 +49,12 @@ export async function updateMyProfile(
       ...(patch.full_name !== undefined && { full_name: patch.full_name }),
       ...(patch.description !== undefined && { description: patch.description }),
       ...(patch.avatar_url !== undefined && { avatar_url: patch.avatar_url }),
-      ...(patch.document_url !== undefined && { document_url: patch.document_url }),
+      // новый/заменённый документ уходит на проверку администратору
+      ...(patch.document_url !== undefined && {
+        document_url: patch.document_url,
+        document_status: DOCUMENT_STATUSES.PENDING,
+        id_verified: false,
+      }),
     });
     if (patch.specialization_ids) {
       await profiles.setMasterSpecializations(master.id, patch.specialization_ids);
