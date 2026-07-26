@@ -24,7 +24,7 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
   const { data: me } = useMe();
   const [completing, setCompleting] = useState(false);
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["order", id],
     queryFn: () => apiFetch<OrderWithRelations>(`/api/orders/${id}`),
   });
@@ -52,7 +52,7 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  if (isLoading || !order) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-2/3" />
@@ -61,10 +61,26 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  if (isError || !order) {
+    return (
+      <Card className="rounded-2xl">
+        <CardContent className="space-y-3 py-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {error instanceof FetchError ? error.message : "Не удалось загрузить заказ"}
+          </p>
+          <Button variant="outline" className="rounded-xl" onClick={() => refetch()}>
+            Повторить
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const afterImages = order.images.filter((i) => i.type === "AFTER");
+  const showComplete = isMine && order.status === "IN_PROGRESS";
 
   return (
-    <div className="space-y-4">
+    <div className={showComplete ? "space-y-4 pb-20" : "space-y-4"}>
       <PageHeader
         title={order.title}
         subtitle={`Создан ${formatDateTime(order.created_at)}`}
@@ -117,11 +133,8 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
-      {/* Чат выше завершения — при фокусе на поле ввода браузер не уводит кнопку «Работа выполнена» */}
-      {isMine && me && <ChatPanel orderId={id} myUserId={me.user.id} />}
-
-      {/* Работа в процессе: фото «до/после» + завершение (как в первом варианте) */}
-      {isMine && order.status === "IN_PROGRESS" && (
+      {/* Как в первом варианте: завершение СРАЗУ после фото, чат ниже */}
+      {showComplete && (
         <Card className="rounded-2xl border-2 border-blue-500/30">
           <CardContent className="space-y-3">
             <p className="font-semibold">Завершение работы</p>
@@ -162,6 +175,25 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
             Вы откликнулись на этот заказ. Ждём решения клиента.
           </CardContent>
         </Card>
+      )}
+
+      {/* Чат ниже блока завершения — как в первом варианте */}
+      {isMine && me && <ChatPanel orderId={id} myUserId={me.user.id} />}
+
+      {/* Фиксированная кнопка завершения над нижним меню — не пропадает при скролле/ответе */}
+      {showComplete && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 px-4">
+          <div className="pointer-events-auto mx-auto max-w-2xl">
+            <Button
+              className="h-12 w-full rounded-xl bg-success text-success-foreground shadow-lg hover:bg-success/90"
+              onClick={markComplete}
+              disabled={completing || afterImages.length === 0}
+            >
+              {completing ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              {afterImages.length === 0 ? "Сначала загрузите фото «после»" : "Работа выполнена"}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
