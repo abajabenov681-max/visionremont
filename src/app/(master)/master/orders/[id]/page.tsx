@@ -13,7 +13,6 @@ import { StatusBadge } from "@/components/status-badge";
 import { ApplyForm } from "@/features/orders/apply-form";
 import { ImageUploader } from "@/features/orders/image-uploader";
 import { ChatPanel } from "@/features/chat/chat-panel";
-import { EscrowCard } from "@/features/escrow/escrow-card";
 import { useMe } from "@/hooks/useMe";
 import { apiFetch, FetchError } from "@/lib/fetcher";
 import { formatDateTime, formatMoney } from "@/lib/format";
@@ -99,9 +98,6 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
         </CardContent>
       </Card>
 
-      {/* Escrow: состояние безопасной сделки (виден только назначенному мастеру) */}
-      {isMine && <EscrowCard escrow={order.escrow} />}
-
       {/* Фото */}
       {order.images.length > 0 && (
         <Card className="rounded-2xl">
@@ -121,7 +117,10 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
-      {/* Работа в процессе: фото «после» + завершение */}
+      {/* Чат выше завершения — при фокусе на поле ввода браузер не уводит кнопку «Работа выполнена» */}
+      {isMine && me && <ChatPanel orderId={id} myUserId={me.user.id} />}
+
+      {/* Работа в процессе: фото «до/после» + завершение (как в первом варианте) */}
       {isMine && order.status === "IN_PROGRESS" && (
         <Card className="rounded-2xl border-2 border-blue-500/30">
           <CardContent className="space-y-3">
@@ -147,7 +146,7 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
       )}
 
       {isMine && order.status === "WAIT_CONFIRMATION" && (
-        <Card className="rounded-2xl border-brand/40 bg-brand-muted">
+        <Card className="rounded-2xl border-amber-500/40 bg-amber-500/5">
           <CardContent className="text-sm">
             Ожидаем подтверждения клиента. После подтверждения заказ перейдёт в гарантию, а статистика — в ваш
             рейтинг.
@@ -164,9 +163,6 @@ export default function MasterOrderPage({ params }: { params: Promise<{ id: stri
           </CardContent>
         </Card>
       )}
-
-      {/* Чат по назначенному заказу */}
-      {isMine && me && <ChatPanel orderId={id} myUserId={me.user.id} />}
     </div>
   );
 }
