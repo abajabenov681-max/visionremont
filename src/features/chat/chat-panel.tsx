@@ -19,7 +19,7 @@ export function ChatPanel({ orderId, myUserId }: { orderId: string; myUserId: st
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const { data: messages, isLoading } = useQuery({
     queryKey: ["chat", orderId],
@@ -38,8 +38,12 @@ export function ChatPanel({ orderId, myUserId }: { orderId: string; myUserId: st
     },
   });
 
+  // Скроллим только список сообщений — не всю страницу, иначе уезжают
+  // плашка «до/после» и кнопка завершения заказа выше чата.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const list = listRef.current;
+    if (!list) return;
+    list.scrollTop = list.scrollHeight;
   }, [messages?.length]);
 
   async function send(e: React.FormEvent) {
@@ -71,7 +75,7 @@ export function ChatPanel({ orderId, myUserId }: { orderId: string; myUserId: st
         <CardTitle className="text-base">Чат по заказу</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex max-h-80 min-h-40 flex-col gap-2 overflow-y-auto pr-1">
+        <div ref={listRef} className="flex max-h-80 min-h-40 flex-col gap-2 overflow-y-auto pr-1">
           {isLoading ? (
             <>
               <Skeleton className="h-10 w-2/3 rounded-xl" />
@@ -102,7 +106,6 @@ export function ChatPanel({ orderId, myUserId }: { orderId: string; myUserId: st
               Сообщений пока нет — напишите первым
             </p>
           )}
-          <div ref={bottomRef} />
         </div>
         <form onSubmit={send} className="flex gap-2">
           <Input
